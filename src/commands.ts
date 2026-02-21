@@ -1,6 +1,7 @@
 import { readConfig, setUser } from "./config";
 import { createUser, findUserByName, deleteAllUsers, getUsers } from "./db/queries/users";
 import { getAllFeeds, User, createFeed, printFeed, parseDuration, scrapeFeeds } from "./db/queries/feeds";
+import { getPostsForUser } from "./db/queries/posts";
 import { fetchFeed } from "./rss";
 import { createFeedFollow, deleteFeedFollowByUrl, findFeedByUrl, getFeedFollowsForUser } from "./db/queries/feedFollows";
 
@@ -181,6 +182,25 @@ export const handlerFollow: UserCommandHandler = async (user, ...args) => {
     } else {
       throw err;
     }
+  }
+};
+
+export const handlerBrowse: UserCommandHandler = async (user, ...args) => {
+  const limit = args[0] ? parseInt(args[0], 10) : 2;
+  const results = await getPostsForUser(user.id, limit);
+
+  if (results.length === 0) {
+    console.log("No posts found.");
+    return;
+  }
+
+  for (const result of results) {
+    const post = result.posts;
+    console.log(`Title: ${post.title}`);
+    console.log(`URL:   ${post.url}`);
+    if (post.description) console.log(`Desc:  ${post.description.slice(0, 100)}`);
+    if (post.publishedAt) console.log(`Date:  ${post.publishedAt}`);
+    console.log("");
   }
 };
 
